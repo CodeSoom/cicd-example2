@@ -32,3 +32,15 @@ jobs:
         docker login -u ${{ secrets.USERNAME }} -p ${{ secrets.PASSWORD }}
         docker tag cicdexample hannut1/cicdexample:${GITHUB_SHA::7}
         docker push hannut1/cicdexample:${GITHUB_SHA::7}
+    - name: Deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ec2-3-36-114-217.ap-northeast-2.compute.amazonaws.com
+        username: ec2-user
+        key: ${{ secrets.PRIVATE_KEY }}
+        envs: GITHUB_SHA
+        script: |
+          docker pull hannut1/cicdexample:${GITHUB_SHA::7}
+          docker tag hannut1/cicdexample:${GITHUB_SHA::7} cicdexample
+          docker stop server
+          docker run -d --rm --name server -p 80:3000 cicdexample
